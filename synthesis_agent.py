@@ -1,7 +1,3 @@
-"""
-Synthesis Agent - Combines research findings into organized insights
-"""
-
 import asyncio
 import logging
 from typing import Dict, List, Any, Optional
@@ -13,7 +9,6 @@ from utils import setup_logging
 
 @dataclass
 class SynthesisResult:
-    """Result of the synthesis process"""
     key_insights: List[str]
     themes: List[Dict[str, Any]]
     trends: List[Dict[str, Any]]
@@ -23,10 +18,6 @@ class SynthesisResult:
     recommendations: List[str]
 
 class SynthesisAgent:
-    """
-    Agent responsible for synthesizing research findings into coherent insights,
-    identifying patterns, themes, and trends across multiple sources.
-    """
     
     def __init__(self, config: Dict[str, Any]):
         self.config = config
@@ -49,34 +40,18 @@ Focus on creating a comprehensive, well-organized synthesis that adds value beyo
         sources: List[Dict[str, Any]], 
         conflicts: List[Dict[str, Any]]
     ) -> SynthesisResult:
-        """
-        Synthesize research findings into organized insights.
-        
-        Args:
-            findings: List of research findings from different tasks
-            sources: List of evaluated sources
-            conflicts: List of detected conflicts
-            
-        Returns:
-            SynthesisResult with organized insights
-        """
         self.logger.info(f"Synthesizing {len(findings)} findings with {len(sources)} sources")
         
-        # Analyze findings for patterns
         themes = await self._identify_themes(findings)
         trends = await self._identify_trends(findings, sources)
         key_insights = await self._extract_key_insights(findings, themes)
         
-        # Generate conclusions
         conclusions = await self._generate_conclusions(findings, themes, conflicts)
         
-        # Identify gaps
         gaps = await self._identify_research_gaps(findings, sources)
         
-        # Generate recommendations
         recommendations = await self._generate_recommendations(findings, gaps, conflicts)
         
-        # Calculate overall confidence
         confidence = await self._calculate_synthesis_confidence(findings, sources, conflicts)
         
         return SynthesisResult(
@@ -90,8 +65,6 @@ Focus on creating a comprehensive, well-organized synthesis that adds value beyo
         )
 
     async def _identify_themes(self, findings: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-        """Identify common themes across research findings"""
-        
         prompt = f"""
         Analyze these research findings to identify common themes:
         

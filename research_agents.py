@@ -1,7 +1,3 @@
-"""
-Research Team - Multiple specialized agents working together
-"""
-
 import asyncio
 import logging
 from typing import Dict, List, Any, Optional, AsyncGenerator
@@ -15,7 +11,6 @@ from utils import setup_logging
 
 @dataclass
 class ResearchResult:
-    """Represents a single research result"""
     task_id: str
     title: str
     content: str
@@ -26,16 +21,14 @@ class ResearchResult:
 
 @dataclass
 class SourceInfo:
-    """Information about a source"""
     url: str
     title: str
     snippet: str
     domain: str
     quality_score: float
-    reliability: str  # "high", "medium", "low"
+    reliability: str
 
 class FactFinderAgent:
-    """Agent specialized in finding factual information"""
     
     def __init__(self, config: Dict[str, Any], agent_id: str = "fact_finder"):
         self.config = config
@@ -54,18 +47,13 @@ class FactFinderAgent:
 Always cite your sources and indicate confidence levels."""
 
     async def research_task(self, task: Dict[str, Any]) -> ResearchResult:
-        """Research a specific task and return findings"""
-        
         self.logger.info(f"Researching task: {task.get('title', 'Unknown')}")
         
-        # Search for information
         search_query = " ".join(task.get('keywords', []))
         search_results = await self.search_client.search(search_query, max_results=10)
         
-        # Analyze and extract facts
         facts = await self._extract_facts(search_results, task)
         
-        # Calculate confidence
         confidence = await self._calculate_confidence(facts, search_results)
         
         return ResearchResult(
@@ -79,8 +67,6 @@ Always cite your sources and indicate confidence levels."""
         )
 
     async def _extract_facts(self, search_results: List[Dict[str, Any]], task: Dict[str, Any]) -> str:
-        """Extract factual information from search results"""
-        
         prompt = f"""
         Task: {task.get('title', 'Unknown')}
         Description: {task.get('description', 'No description')}
@@ -101,9 +87,6 @@ Always cite your sources and indicate confidence levels."""
         return await self.llm_client.get_completion(prompt)
 
     async def _calculate_confidence(self, facts: str, sources: List[Dict[str, Any]]) -> float:
-        """Calculate confidence level based on source quality and fact consistency"""
-        
-        # Simple confidence calculation based on source quality
         high_quality_sources = sum(1 for s in sources if self._is_high_quality_source(s))
         total_sources = len(sources)
         
@@ -111,16 +94,14 @@ Always cite your sources and indicate confidence levels."""
             return 0.0
         
         base_confidence = high_quality_sources / total_sources
-        return min(1.0, base_confidence + 0.2)  # Add some base confidence
+        return min(1.0, base_confidence + 0.2)
 
     def _is_high_quality_source(self, source: Dict[str, Any]) -> bool:
-        """Check if a source is high quality"""
         domain = source.get('domain', '').lower()
         high_quality_domains = ['.edu', '.gov', '.org', 'wikipedia.org', 'reuters.com', 'bbc.com']
         return any(domain.endswith(d) for d in high_quality_domains)
 
 class SourceCheckerAgent:
-    """Agent specialized in evaluating source quality and reliability"""
     
     def __init__(self, config: Dict[str, Any], agent_id: str = "source_checker"):
         self.config = config
@@ -138,8 +119,6 @@ class SourceCheckerAgent:
 Rate sources as High, Medium, or Low reliability."""
 
     async def evaluate_sources(self, sources: List[Dict[str, Any]]) -> List[SourceInfo]:
-        """Evaluate the quality and reliability of sources"""
-        
         self.logger.info(f"Evaluating {len(sources)} sources")
         
         evaluated_sources = []
@@ -150,8 +129,6 @@ Rate sources as High, Medium, or Low reliability."""
         return evaluated_sources
 
     async def _evaluate_single_source(self, source: Dict[str, Any]) -> SourceInfo:
-        """Evaluate a single source"""
-        
         prompt = f"""
         Evaluate this source for reliability and quality:
         
@@ -183,7 +160,6 @@ Rate sources as High, Medium, or Low reliability."""
         )
 
     def _parse_evaluation(self, response: str) -> Dict[str, Any]:
-        """Parse the evaluation response"""
         try:
             import json
             return json.loads(response)
@@ -194,7 +170,6 @@ Rate sources as High, Medium, or Low reliability."""
             }
 
 class ConflictDetectorAgent:
-    """Agent specialized in detecting conflicts and contradictions"""
     
     def __init__(self, config: Dict[str, Any], agent_id: str = "conflict_detector"):
         self.config = config
@@ -212,14 +187,11 @@ class ConflictDetectorAgent:
 Be thorough but fair in your analysis."""
 
     async def detect_conflicts(self, research_results: List[ResearchResult]) -> List[Dict[str, Any]]:
-        """Detect conflicts and contradictions in research results"""
-        
         self.logger.info(f"Detecting conflicts in {len(research_results)} research results")
         
         if len(research_results) < 2:
             return []
         
-        # Compare results for conflicts
         conflicts = []
         for i, result1 in enumerate(research_results):
             for j, result2 in enumerate(research_results[i+1:], i+1):
@@ -230,8 +202,6 @@ Be thorough but fair in your analysis."""
         return conflicts
 
     async def _compare_results(self, result1: ResearchResult, result2: ResearchResult) -> Optional[Dict[str, Any]]:
-        """Compare two research results for conflicts"""
-        
         prompt = f"""
         Compare these two research results for conflicts or contradictions:
         
@@ -260,7 +230,6 @@ Be thorough but fair in your analysis."""
         return None
 
     def _parse_conflict(self, response: str) -> Dict[str, Any]:
-        """Parse the conflict detection response"""
         try:
             import json
             return json.loads(response)
@@ -273,58 +242,39 @@ Be thorough but fair in your analysis."""
             }
 
 class ResearchTeam:
-    """
-    Coordinates multiple specialized research agents for parallel research execution.
-    """
     
     def __init__(self, config: Dict[str, Any]):
         self.config = config
         self.logger = setup_logging("research_team")
         
-        # Initialize specialized agents
         self.fact_finder = FactFinderAgent(config, "fact_finder")
         self.source_checker = SourceCheckerAgent(config, "source_checker")
         self.conflict_detector = ConflictDetectorAgent(config, "conflict_detector")
         
-        # Research results storage
         self.research_results = []
         self.evaluated_sources = []
         self.detected_conflicts = []
 
     async def execute_parallel_research(self, research_plan: List[Dict[str, Any]]) -> Dict[str, Any]:
-        """
-        Execute research tasks in parallel using multiple agents.
-        
-        Args:
-            research_plan: List of research tasks to execute
-            
-        Returns:
-            Dictionary with findings, sources, and conflicts
-        """
         self.logger.info(f"Executing parallel research for {len(research_plan)} tasks")
         
-        # Reset results
         self.research_results = []
         self.evaluated_sources = []
         self.detected_conflicts = []
         
-        # Execute research tasks in parallel
         tasks = [self.fact_finder.research_task(task) for task in research_plan]
         results = await asyncio.gather(*tasks, return_exceptions=True)
         
-        # Filter out exceptions and store results
         for result in results:
             if isinstance(result, ResearchResult):
                 self.research_results.append(result)
         
-        # Evaluate sources
         all_sources = []
         for result in self.research_results:
             all_sources.extend(result.sources)
         
         self.evaluated_sources = await self.source_checker.evaluate_sources(all_sources)
         
-        # Detect conflicts
         self.detected_conflicts = await self.conflict_detector.detect_conflicts(self.research_results)
         
         self.logger.info(f"Research completed: {len(self.research_results)} results, {len(self.evaluated_sources)} sources, {len(self.detected_conflicts)} conflicts")
@@ -336,21 +286,10 @@ class ResearchTeam:
         }
 
     async def execute_parallel_research_streaming(self, research_plan: List[Dict[str, Any]]) -> AsyncGenerator[Dict[str, Any], None]:
-        """
-        Execute research with streaming updates.
-        
-        Args:
-            research_plan: List of research tasks to execute
-            
-        Yields:
-            Progress updates and partial results
-        """
         self.logger.info(f"Starting streaming research for {len(research_plan)} tasks")
         
-        # Reset results
         self.research_results = []
         
-        # Execute tasks with progress updates
         for i, task in enumerate(research_plan):
             yield {
                 'type': 'task_start',
@@ -375,7 +314,6 @@ class ResearchTeam:
                     'error': str(e)
                 }
         
-        # Evaluate sources
         yield {'type': 'evaluating_sources', 'message': 'Evaluating source quality...'}
         all_sources = []
         for result in self.research_results:
@@ -384,13 +322,11 @@ class ResearchTeam:
         self.evaluated_sources = await self.source_checker.evaluate_sources(all_sources)
         yield {'type': 'sources_evaluated', 'count': len(self.evaluated_sources)}
         
-        # Detect conflicts
         yield {'type': 'detecting_conflicts', 'message': 'Detecting conflicts...'}
         self.detected_conflicts = await self.conflict_detector.detect_conflicts(self.research_results)
         yield {'type': 'conflicts_detected', 'count': len(self.detected_conflicts)}
 
     async def get_final_results(self) -> Dict[str, Any]:
-        """Get the final research results"""
         return {
             'findings': [self._result_to_dict(r) for r in self.research_results],
             'sources': [self._source_to_dict(s) for s in self.evaluated_sources],
@@ -398,7 +334,6 @@ class ResearchTeam:
         }
 
     def _result_to_dict(self, result: ResearchResult) -> Dict[str, Any]:
-        """Convert ResearchResult to dictionary"""
         return {
             'task_id': result.task_id,
             'title': result.title,
@@ -410,7 +345,6 @@ class ResearchTeam:
         }
 
     def _source_to_dict(self, source: SourceInfo) -> Dict[str, Any]:
-        """Convert SourceInfo to dictionary"""
         return {
             'url': source.url,
             'title': source.title,
@@ -420,10 +354,7 @@ class ResearchTeam:
             'reliability': source.reliability
         }
 
-# Example usage
 async def test_research_team():
-    """Test the research team with sample tasks"""
-    
     config = {
         "llm_provider": "openai",
         "model": "gpt-4",
