@@ -1,6 +1,3 @@
-"""
-Search Client - Handles web search functionality with multiple providers
-"""
 
 import os
 import asyncio
@@ -9,7 +6,6 @@ from typing import Dict, List, Any, Optional
 from urllib.parse import urlparse
 import re
 
-# Import search libraries
 try:
     from tavily import TavilyClient
 except ImportError:
@@ -26,24 +22,17 @@ except ImportError:
     requests = None
 
 class SearchClient:
-    """
-    Client for web search functionality.
-    Supports multiple search providers with fallback options.
-    """
     
     def __init__(self, config: Dict[str, Any]):
         self.config = config
         self.logger = logging.getLogger("search_client")
         
-        # Initialize provider
         self.provider = config.get("search_provider", "tavily").lower()
         self.max_results = config.get("max_results", 10)
         
-        # Initialize search clients
         self._initialize_clients()
         
     def _initialize_clients(self):
-        """Initialize search clients for different providers"""
         
         if self.provider == "tavily":
             if TavilyClient is None:
@@ -65,16 +54,6 @@ class SearchClient:
             raise ValueError(f"Unsupported search provider: {self.provider}")
     
     async def search(self, query: str, max_results: Optional[int] = None) -> List[Dict[str, Any]]:
-        """
-        Perform web search.
-        
-        Args:
-            query: Search query
-            max_results: Maximum number of results to return
-            
-        Returns:
-            List of search results with metadata
-        """
         
         max_results = max_results or self.max_results
         
@@ -91,7 +70,6 @@ class SearchClient:
             return self._get_fallback_results(query)
     
     async def _search_tavily(self, query: str, max_results: int) -> List[Dict[str, Any]]:
-        """Search using Tavily"""
         
         response = await asyncio.to_thread(
             self.client.search,
@@ -115,7 +93,6 @@ class SearchClient:
         return results
     
     async def _search_duckduckgo(self, query: str, max_results: int) -> List[Dict[str, Any]]:
-        """Search using DuckDuckGo"""
         
         results = []
         
@@ -131,7 +108,7 @@ class SearchClient:
                     "snippet": result.get("body", ""),
                     "domain": self._extract_domain(result.get("link", "")),
                     "published_date": None,
-                    "score": 0.5  # Default score for DuckDuckGo
+                    "score": 0.5
                 }
                 results.append(processed_result)
                 
@@ -141,13 +118,11 @@ class SearchClient:
         return results
     
     def _extract_domain(self, url: str) -> str:
-        """Extract domain from URL"""
         
         try:
             parsed = urlparse(url)
             domain = parsed.netloc.lower()
             
-            # Remove www. prefix
             if domain.startswith("www."):
                 domain = domain[4:]
             
@@ -156,7 +131,6 @@ class SearchClient:
             return "unknown"
     
     def _get_fallback_results(self, query: str) -> List[Dict[str, Any]]:
-        """Fallback results when search fails"""
         
         return [
             {
@@ -175,22 +149,9 @@ class SearchClient:
         filters: Dict[str, Any],
         max_results: Optional[int] = None
     ) -> List[Dict[str, Any]]:
-        """
-        Search with additional filters.
         
-        Args:
-            query: Search query
-            filters: Dictionary of filters (domain, date_range, etc.)
-            max_results: Maximum number of results
-            
-        Returns:
-            Filtered search results
-        """
-        
-        # Get base results
         results = await self.search(query, max_results)
         
-        # Apply filters
         filtered_results = []
         
         for result in results:
@@ -200,9 +161,7 @@ class SearchClient:
         return filtered_results
     
     def _apply_filters(self, result: Dict[str, Any], filters: Dict[str, Any]) -> bool:
-        """Apply filters to a single result"""
         
-        # Domain filter
         if "domain" in filters:
             allowed_domains = filters["domain"]
             if isinstance(allowed_domains, str):
@@ -211,12 +170,9 @@ class SearchClient:
             if result.get("domain") not in allowed_domains:
                 return False
         
-        # Date filter
         if "date_range" in filters:
-            # Simple date filtering - could be enhanced
             pass
         
-        # Content filter
         if "content_keywords" in filters:
             keywords = filters["content_keywords"]
             if isinstance(keywords, str):
@@ -229,15 +185,6 @@ class SearchClient:
         return True
     
     async def get_source_content(self, url: str) -> Optional[str]:
-        """
-        Get the full content of a source URL.
-        
-        Args:
-            url: URL to fetch content from
-            
-        Returns:
-            Content as string or None if failed
-        """
         
         if requests is None:
             self.logger.warning("Requests library not available for content fetching")
@@ -257,45 +204,29 @@ class SearchClient:
             
             response.raise_for_status()
             
-            # Extract text content (simple approach)
             content = response.text
             
-            # Remove HTML tags (basic)
             content = re.sub(r'<[^>]+>', '', content)
             
-            # Clean up whitespace
             content = re.sub(r'\s+', ' ', content).strip()
             
-            return content[:5000]  # Limit content length
+            return content[:5000]
             
         except Exception as e:
             self.logger.error(f"Failed to fetch content from {url}: {str(e)}")
             return None
     
     async def search_multiple_queries(self, queries: List[str], max_results_per_query: Optional[int] = None) -> Dict[str, List[Dict[str, Any]]]:
-        """
-        Search multiple queries in parallel.
-        
-        Args:
-            queries: List of search queries
-            max_results_per_query: Maximum results per query
-            
-        Returns:
-            Dictionary mapping queries to results
-        """
         
         max_results_per_query = max_results_per_query or self.max_results
         
-        # Create search tasks
         tasks = [
             self.search(query, max_results_per_query) 
             for query in queries
         ]
         
-        # Execute searches in parallel
         results = await asyncio.gather(*tasks, return_exceptions=True)
         
-        # Process results
         search_results = {}
         for i, result in enumerate(results):
             query = queries[i]
@@ -309,54 +240,38 @@ class SearchClient:
         return search_results
     
     def get_source_quality_score(self, result: Dict[str, Any]) -> float:
-        """
-        Calculate quality score for a search result.
-        
-        Args:
-            result: Search result dictionary
-            
-        Returns:
-            Quality score between 0 and 1
-        """
         
         score = 0.0
         
-        # Domain quality
         domain = result.get("domain", "").lower()
         if any(high_quality in domain for high_quality in [".edu", ".gov", ".org"]):
             score += 0.3
         elif any(medium_quality in domain for medium_quality in ["wikipedia.org", "reuters.com", "bbc.com"]):
             score += 0.2
         
-        # Content length
         snippet_length = len(result.get("snippet", ""))
         if snippet_length > 200:
             score += 0.2
         elif snippet_length > 100:
             score += 0.1
         
-        # Title relevance
         title = result.get("title", "").lower()
         if title and len(title) > 10:
             score += 0.1
         
-        # URL structure
         url = result.get("url", "")
         if url and "http" in url:
             score += 0.1
         
-        # Published date (if available)
         if result.get("published_date"):
             score += 0.1
         
-        # Provider score
         provider_score = result.get("score", 0.0)
         score += provider_score * 0.2
         
         return min(1.0, score)
     
     def get_available_providers(self) -> List[str]:
-        """Get list of available search providers"""
         
         providers = []
         
@@ -369,7 +284,6 @@ class SearchClient:
         return providers
     
     def get_provider_info(self) -> Dict[str, Any]:
-        """Get information about the current search provider"""
         
         return {
             "provider": self.provider,
@@ -377,9 +291,7 @@ class SearchClient:
             "available_providers": self.get_available_providers()
         }
 
-# Example usage
 async def test_search_client():
-    """Test the search client"""
     
     config = {
         "search_provider": "tavily",
@@ -389,7 +301,6 @@ async def test_search_client():
     try:
         client = SearchClient(config)
         
-        # Test basic search
         results = await client.search("electric car benefits")
         print(f"Search results: {len(results)} found")
         
@@ -400,7 +311,6 @@ async def test_search_client():
             print(f"   Quality Score: {client.get_source_quality_score(result):.2f}")
             print()
         
-        # Test filtered search
         filters = {
             "domain": ["wikipedia.org", "edu"],
             "content_keywords": ["electric", "car"]
@@ -409,14 +319,12 @@ async def test_search_client():
         filtered_results = await client.search_with_filters("electric vehicles", filters)
         print(f"Filtered results: {len(filtered_results)} found")
         
-        # Test multiple queries
         queries = ["electric cars", "renewable energy", "climate change"]
         multi_results = await client.search_multiple_queries(queries, max_results_per_query=3)
         
         for query, results in multi_results.items():
             print(f"'{query}': {len(results)} results")
         
-        # Get provider info
         provider_info = client.get_provider_info()
         print(f"Provider info: {provider_info}")
         

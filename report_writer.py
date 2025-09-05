@@ -1,7 +1,3 @@
-"""
-Report Writer Agent - Generates professional research reports with citations
-"""
-
 import asyncio
 import logging
 from typing import Dict, List, Any, Optional
@@ -14,7 +10,6 @@ from utils import setup_logging
 
 @dataclass
 class Citation:
-    """Represents a citation in the report"""
     id: str
     url: str
     title: str
@@ -25,7 +20,6 @@ class Citation:
 
 @dataclass
 class ResearchReport:
-    """Complete research report structure"""
     title: str
     executive_summary: str
     methodology: str
@@ -37,10 +31,6 @@ class ResearchReport:
     metadata: Dict[str, Any]
 
 class ReportWriter:
-    """
-    Agent responsible for creating professional research reports with proper
-    citations, formatting, and structure.
-    """
     
     def __init__(self, config: Dict[str, Any]):
         self.config = config
@@ -65,49 +55,26 @@ Focus on clarity, accuracy, and professional presentation."""
         conflicts: List[Dict[str, Any]],
         user_profile: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
-        """
-        Create a comprehensive research report.
-        
-        Args:
-            question: The original research question
-            synthesis: Synthesis results from synthesis agent
-            sources: List of evaluated sources
-            conflicts: List of detected conflicts
-            user_profile: Optional user profile for personalization
-            
-        Returns:
-            Complete research report
-        """
         self.logger.info(f"Creating research report for: {question}")
         
-        # Generate report title
         title = await self._generate_report_title(question)
         
-        # Create executive summary
         executive_summary = await self._create_executive_summary(synthesis, question)
         
-        # Write methodology section
         methodology = await self._write_methodology(sources, conflicts)
         
-        # Organize key findings
         key_findings = await self._organize_key_findings(synthesis)
         
-        # Create detailed analysis
         detailed_analysis = await self._create_detailed_analysis(synthesis, sources, conflicts)
         
-        # Write conclusions
         conclusions = await self._write_conclusions(synthesis, conflicts)
         
-        # Generate recommendations
         recommendations = await self._generate_recommendations(synthesis, user_profile)
         
-        # Create citations
         citations = await self._create_citations(sources)
         
-        # Generate metadata
         metadata = await self._generate_metadata(question, synthesis, sources, conflicts)
         
-        # Create the complete report
         report = ResearchReport(
             title=title,
             executive_summary=executive_summary,
@@ -120,15 +87,12 @@ Focus on clarity, accuracy, and professional presentation."""
             metadata=metadata
         )
         
-        # Format the report
         formatted_report = await self._format_report(report)
         
         self.logger.info("Research report created successfully")
         return formatted_report
 
     async def _generate_report_title(self, question: str) -> str:
-        """Generate a professional report title"""
-        
         prompt = f"""
         Generate a professional, academic-style title for a research report based on this question:
         
@@ -146,8 +110,6 @@ Focus on clarity, accuracy, and professional presentation."""
         return await self.llm_client.get_completion(prompt)
 
     async def _create_executive_summary(self, synthesis: Any, question: str) -> str:
-        """Create an executive summary"""
-        
         prompt = f"""
         Create an executive summary for a research report on: "{question}"
         
@@ -170,8 +132,6 @@ Focus on clarity, accuracy, and professional presentation."""
         return await self.llm_client.get_completion(prompt)
 
     async def _write_methodology(self, sources: List[Dict[str, Any]], conflicts: List[Dict[str, Any]]) -> str:
-        """Write the methodology section"""
-        
         prompt = f"""
         Write a methodology section for a research report based on:
         
@@ -193,12 +153,9 @@ Focus on clarity, accuracy, and professional presentation."""
         return await self.llm_client.get_completion(prompt)
 
     async def _organize_key_findings(self, synthesis: Any) -> List[str]:
-        """Organize and format key findings"""
-        
         if hasattr(synthesis, 'key_insights') and synthesis.key_insights:
             return synthesis.key_insights
         
-        # Fallback: create basic findings
         return [
             "Research findings require further analysis",
             "Multiple sources were consulted",
@@ -206,30 +163,22 @@ Focus on clarity, accuracy, and professional presentation."""
         ]
 
     async def _create_detailed_analysis(self, synthesis: Any, sources: List[Dict[str, Any]], conflicts: List[Dict[str, Any]]) -> Dict[str, Any]:
-        """Create detailed analysis sections"""
-        
         analysis = {}
         
-        # Themes analysis
         if hasattr(synthesis, 'themes') and synthesis.themes:
             analysis['themes'] = await self._analyze_themes(synthesis.themes)
         
-        # Trends analysis
         if hasattr(synthesis, 'trends') and synthesis.trends:
             analysis['trends'] = await self._analyze_trends(synthesis.trends)
         
-        # Source analysis
         analysis['source_analysis'] = await self._analyze_sources(sources)
         
-        # Conflict analysis
         if conflicts:
             analysis['conflict_analysis'] = await self._analyze_conflicts(conflicts)
         
         return analysis
 
     async def _analyze_themes(self, themes: List[Dict[str, Any]]) -> str:
-        """Analyze and describe themes"""
-        
         prompt = f"""
         Provide a detailed analysis of these research themes:
         
@@ -247,8 +196,6 @@ Focus on clarity, accuracy, and professional presentation."""
         return await self.llm_client.get_completion(prompt)
 
     async def _analyze_trends(self, trends: List[Dict[str, Any]]) -> str:
-        """Analyze and describe trends"""
-        
         prompt = f"""
         Provide a detailed analysis of these research trends:
         
@@ -266,8 +213,6 @@ Focus on clarity, accuracy, and professional presentation."""
         return await self.llm_client.get_completion(prompt)
 
     async def _analyze_sources(self, sources: List[Dict[str, Any]]) -> str:
-        """Analyze the sources used"""
-        
         prompt = f"""
         Provide an analysis of the sources used in this research:
         
@@ -286,8 +231,6 @@ Focus on clarity, accuracy, and professional presentation."""
         return await self.llm_client.get_completion(prompt)
 
     async def _analyze_conflicts(self, conflicts: List[Dict[str, Any]]) -> str:
-        """Analyze detected conflicts"""
-        
         prompt = f"""
         Provide an analysis of the conflicts detected in this research:
         
@@ -306,12 +249,9 @@ Focus on clarity, accuracy, and professional presentation."""
         return await self.llm_client.get_completion(prompt)
 
     async def _write_conclusions(self, synthesis: Any, conflicts: List[Dict[str, Any]]) -> List[str]:
-        """Write conclusions based on synthesis and conflicts"""
-        
         if hasattr(synthesis, 'conclusions') and synthesis.conclusions:
             return synthesis.conclusions
         
-        # Fallback: generate basic conclusions
         prompt = f"""
         Generate conclusions for a research report based on:
         
@@ -331,14 +271,11 @@ Focus on clarity, accuracy, and professional presentation."""
         return self._parse_conclusions(response)
 
     async def _generate_recommendations(self, synthesis: Any, user_profile: Optional[Dict[str, Any]] = None) -> List[str]:
-        """Generate recommendations based on findings and user profile"""
-        
         if hasattr(synthesis, 'recommendations') and synthesis.recommendations:
             base_recommendations = synthesis.recommendations
         else:
             base_recommendations = ["Further research is recommended"]
         
-        # Personalize recommendations if user profile provided
         if user_profile:
             personalized_recommendations = await self._personalize_recommendations(base_recommendations, user_profile)
             return personalized_recommendations
@@ -346,8 +283,6 @@ Focus on clarity, accuracy, and professional presentation."""
         return base_recommendations
 
     async def _personalize_recommendations(self, recommendations: List[str], user_profile: Dict[str, Any]) -> List[str]:
-        """Personalize recommendations based on user profile"""
-        
         prompt = f"""
         Personalize these research recommendations for this user:
         
@@ -367,16 +302,14 @@ Focus on clarity, accuracy, and professional presentation."""
         return self._parse_recommendations(response)
 
     async def _create_citations(self, sources: List[Dict[str, Any]]) -> List[Citation]:
-        """Create proper citations for all sources"""
-        
         citations = []
         for i, source in enumerate(sources):
             citation = Citation(
                 id=f"[{i+1}]",
                 url=source.get('url', ''),
                 title=source.get('title', 'Unknown Title'),
-                author=None,  # Would need to extract from source
-                publication_date=None,  # Would need to extract from source
+                author=None,
+                publication_date=None,
                 accessed_date=datetime.now().strftime("%Y-%m-%d"),
                 reliability=source.get('reliability', 'medium')
             )
@@ -385,8 +318,6 @@ Focus on clarity, accuracy, and professional presentation."""
         return citations
 
     async def _generate_metadata(self, question: str, synthesis: Any, sources: List[Dict[str, Any]], conflicts: List[Dict[str, Any]]) -> Dict[str, Any]:
-        """Generate metadata for the report"""
-        
         return {
             "research_question": question,
             "report_generated": datetime.now().isoformat(),
@@ -401,9 +332,6 @@ Focus on clarity, accuracy, and professional presentation."""
         }
 
     async def _format_report(self, report: ResearchReport) -> Dict[str, Any]:
-        """Format the report for final output"""
-        
-        # Create formatted citations
         formatted_citations = []
         for citation in report.citations:
             formatted_citations.append({
@@ -411,7 +339,6 @@ Focus on clarity, accuracy, and professional presentation."""
                 "reference": f"{citation.title}. {citation.url}. Accessed {citation.accessed_date}. Reliability: {citation.reliability}."
             })
         
-        # Create the final report structure
         formatted_report = {
             "title": report.title,
             "executive_summary": report.executive_summary,
@@ -428,7 +355,6 @@ Focus on clarity, accuracy, and professional presentation."""
         return formatted_report
 
     def _parse_conclusions(self, response: str) -> List[str]:
-        """Parse conclusions from LLM response"""
         try:
             import json
             return json.loads(response)
@@ -436,7 +362,6 @@ Focus on clarity, accuracy, and professional presentation."""
             return ["Conclusions require further analysis"]
 
     def _parse_recommendations(self, response: str) -> List[str]:
-        """Parse recommendations from LLM response"""
         try:
             import json
             return json.loads(response)

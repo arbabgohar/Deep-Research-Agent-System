@@ -90,8 +90,6 @@ Focus on creating a comprehensive, well-organized synthesis that adds value beyo
         return self._parse_themes(response)
 
     async def _identify_trends(self, findings: List[Dict[str, Any]], sources: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-        """Identify trends and patterns in the research"""
-        
         prompt = f"""
         Analyze these research findings and sources to identify trends:
         
@@ -122,8 +120,6 @@ Focus on creating a comprehensive, well-organized synthesis that adds value beyo
         return self._parse_trends(response)
 
     async def _extract_key_insights(self, findings: List[Dict[str, Any]], themes: List[Dict[str, Any]]) -> List[str]:
-        """Extract the most important insights from the research"""
-        
         prompt = f"""
         Based on these research findings and identified themes, extract the key insights:
         
@@ -152,8 +148,6 @@ Focus on creating a comprehensive, well-organized synthesis that adds value beyo
         themes: List[Dict[str, Any]], 
         conflicts: List[Dict[str, Any]]
     ) -> List[str]:
-        """Generate conclusions based on findings, themes, and conflicts"""
-        
         prompt = f"""
         Based on the research findings, themes, and conflicts, generate conclusions:
         
@@ -180,8 +174,6 @@ Focus on creating a comprehensive, well-organized synthesis that adds value beyo
         return self._parse_conclusions(response)
 
     async def _identify_research_gaps(self, findings: List[Dict[str, Any]], sources: List[Dict[str, Any]]) -> List[str]:
-        """Identify gaps in the current research"""
-        
         prompt = f"""
         Analyze the research findings and sources to identify gaps:
         
@@ -211,8 +203,6 @@ Focus on creating a comprehensive, well-organized synthesis that adds value beyo
         gaps: List[str], 
         conflicts: List[Dict[str, Any]]
     ) -> List[str]:
-        """Generate recommendations based on findings, gaps, and conflicts"""
-        
         prompt = f"""
         Based on the research findings, identified gaps, and conflicts, generate recommendations:
         
@@ -244,9 +234,6 @@ Focus on creating a comprehensive, well-organized synthesis that adds value beyo
         sources: List[Dict[str, Any]], 
         conflicts: List[Dict[str, Any]]
     ) -> float:
-        """Calculate overall confidence level for the synthesis"""
-        
-        # Calculate confidence based on multiple factors
         total_findings = len(findings)
         high_quality_sources = sum(1 for s in sources if s.get('reliability') == 'high')
         total_sources = len(sources)
@@ -255,20 +242,16 @@ Focus on creating a comprehensive, well-organized synthesis that adds value beyo
         if total_findings == 0 or total_sources == 0:
             return 0.0
         
-        # Base confidence from source quality
         source_confidence = high_quality_sources / total_sources if total_sources > 0 else 0.0
         
-        # Penalty for conflicts
         conflict_penalty = min(0.3, conflict_count * 0.1)
         
-        # Bonus for multiple findings
         findings_bonus = min(0.2, total_findings * 0.05)
         
         confidence = source_confidence - conflict_penalty + findings_bonus
         return max(0.0, min(1.0, confidence))
 
     def _parse_themes(self, response: str) -> List[Dict[str, Any]]:
-        """Parse themes from LLM response"""
         try:
             import json
             return json.loads(response)
@@ -284,7 +267,6 @@ Focus on creating a comprehensive, well-organized synthesis that adds value beyo
             ]
 
     def _parse_trends(self, response: str) -> List[Dict[str, Any]]:
-        """Parse trends from LLM response"""
         try:
             import json
             return json.loads(response)
@@ -300,7 +282,6 @@ Focus on creating a comprehensive, well-organized synthesis that adds value beyo
             ]
 
     def _parse_insights(self, response: str) -> List[str]:
-        """Parse insights from LLM response"""
         try:
             import json
             return json.loads(response)
@@ -308,7 +289,6 @@ Focus on creating a comprehensive, well-organized synthesis that adds value beyo
             return ["Key insights require further analysis"]
 
     def _parse_conclusions(self, response: str) -> List[str]:
-        """Parse conclusions from LLM response"""
         try:
             import json
             return json.loads(response)
@@ -316,7 +296,6 @@ Focus on creating a comprehensive, well-organized synthesis that adds value beyo
             return ["Conclusions require further analysis"]
 
     def _parse_gaps(self, response: str) -> List[str]:
-        """Parse gaps from LLM response"""
         try:
             import json
             return json.loads(response)
@@ -324,7 +303,6 @@ Focus on creating a comprehensive, well-organized synthesis that adds value beyo
             return ["Research gaps require further analysis"]
 
     def _parse_recommendations(self, response: str) -> List[str]:
-        """Parse recommendations from LLM response"""
         try:
             import json
             return json.loads(response)
@@ -332,8 +310,6 @@ Focus on creating a comprehensive, well-organized synthesis that adds value beyo
             return ["Recommendations require further analysis"]
 
     async def create_executive_summary(self, synthesis: SynthesisResult) -> str:
-        """Create an executive summary of the synthesis"""
-        
         prompt = f"""
         Create an executive summary of this research synthesis:
         
@@ -356,8 +332,6 @@ Focus on creating a comprehensive, well-organized synthesis that adds value beyo
         return await self.llm_client.get_completion(prompt)
 
     async def create_detailed_report(self, synthesis: SynthesisResult) -> Dict[str, Any]:
-        """Create a detailed report from the synthesis"""
-        
         executive_summary = await self.create_executive_summary(synthesis)
         
         return {
@@ -379,10 +353,7 @@ Focus on creating a comprehensive, well-organized synthesis that adds value beyo
             }
         }
 
-# Example usage
 async def test_synthesis_agent():
-    """Test the synthesis agent with sample data"""
-    
     config = {
         "llm_provider": "openai",
         "model": "gpt-4",
@@ -391,7 +362,6 @@ async def test_synthesis_agent():
     
     synthesis_agent = SynthesisAgent(config)
     
-    # Sample findings
     sample_findings = [
         {
             "task_id": "task_1",
@@ -431,7 +401,6 @@ async def test_synthesis_agent():
     print(f"  - Trends: {len(synthesis.trends)}")
     print(f"  - Confidence: {synthesis.confidence_level:.2f}")
     
-    # Create detailed report
     report = await synthesis_agent.create_detailed_report(synthesis)
     print(f"  - Executive Summary: {len(report['executive_summary'])} characters")
 

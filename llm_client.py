@@ -1,6 +1,3 @@
-"""
-LLM Client - Handles communication with different LLM providers
-"""
 
 import os
 import asyncio
@@ -8,7 +5,6 @@ import logging
 from typing import Dict, List, Any, Optional
 import json
 
-# Import LLM libraries
 try:
     import openai
 except ImportError:
@@ -20,26 +16,19 @@ except ImportError:
     anthropic = None
 
 class LLMClient:
-    """
-    Client for interacting with different LLM providers.
-    Supports OpenAI and Anthropic with fallback options.
-    """
     
     def __init__(self, config: Dict[str, Any]):
         self.config = config
         self.logger = logging.getLogger("llm_client")
         
-        # Initialize provider
         self.provider = config.get("llm_provider", "openai").lower()
         self.model = config.get("model", "gpt-4")
         self.temperature = config.get("temperature", 0.3)
         self.max_tokens = config.get("max_tokens", 2000)
         
-        # Initialize API clients
         self._initialize_clients()
         
     def _initialize_clients(self):
-        """Initialize API clients for different providers"""
         
         if self.provider == "openai":
             if openai is None:
@@ -66,16 +55,6 @@ class LLMClient:
             raise ValueError(f"Unsupported LLM provider: {self.provider}")
     
     async def get_completion(self, prompt: str, system_prompt: Optional[str] = None) -> str:
-        """
-        Get completion from the LLM.
-        
-        Args:
-            prompt: The user prompt
-            system_prompt: Optional system prompt
-            
-        Returns:
-            LLM response as string
-        """
         
         try:
             if self.provider == "openai":
@@ -90,7 +69,6 @@ class LLMClient:
             return self._get_fallback_response(prompt)
     
     async def _get_openai_completion(self, prompt: str, system_prompt: Optional[str] = None) -> str:
-        """Get completion from OpenAI"""
         
         messages = []
         
@@ -110,9 +88,7 @@ class LLMClient:
         return response.choices[0].message.content
     
     async def _get_anthropic_completion(self, prompt: str, system_prompt: Optional[str] = None) -> str:
-        """Get completion from Anthropic"""
         
-        # Combine system prompt with user prompt for Anthropic
         full_prompt = prompt
         if system_prompt:
             full_prompt = f"{system_prompt}\n\n{prompt}"
@@ -128,9 +104,7 @@ class LLMClient:
         return response.content[0].text
     
     def _get_fallback_response(self, prompt: str) -> str:
-        """Fallback response when LLM fails"""
         
-        # Simple keyword-based fallback
         prompt_lower = prompt.lower()
         
         if "benefits" in prompt_lower and "electric" in prompt_lower:
@@ -143,16 +117,6 @@ class LLMClient:
             return "Analysis completed. Please review the findings and consider additional research if needed."
     
     async def get_structured_completion(self, prompt: str, expected_format: str) -> Dict[str, Any]:
-        """
-        Get structured completion in a specific format.
-        
-        Args:
-            prompt: The user prompt
-            expected_format: Description of expected format (e.g., "JSON array")
-            
-        Returns:
-            Structured response as dictionary
-        """
         
         structured_prompt = f"""
         {prompt}
@@ -163,7 +127,6 @@ class LLMClient:
         
         response = await self.get_completion(structured_prompt)
         
-        # Try to parse as JSON
         try:
             return json.loads(response)
         except json.JSONDecodeError:
@@ -171,16 +134,6 @@ class LLMClient:
             return {"raw_response": response}
     
     async def get_streaming_completion(self, prompt: str, system_prompt: Optional[str] = None):
-        """
-        Get streaming completion from the LLM.
-        
-        Args:
-            prompt: The user prompt
-            system_prompt: Optional system prompt
-            
-        Yields:
-            Chunks of the response
-        """
         
         try:
             if self.provider == "openai":
@@ -197,7 +150,6 @@ class LLMClient:
             yield self._get_fallback_response(prompt)
     
     async def _get_openai_streaming(self, prompt: str, system_prompt: Optional[str] = None):
-        """Get streaming completion from OpenAI"""
         
         messages = []
         
@@ -220,9 +172,7 @@ class LLMClient:
                 yield chunk.choices[0].delta.content
     
     async def _get_anthropic_streaming(self, prompt: str, system_prompt: Optional[str] = None):
-        """Get streaming completion from Anthropic"""
         
-        # Combine system prompt with user prompt for Anthropic
         full_prompt = prompt
         if system_prompt:
             full_prompt = f"{system_prompt}\n\n{prompt}"
@@ -241,7 +191,6 @@ class LLMClient:
                 yield chunk.delta.text
     
     def get_available_models(self) -> List[str]:
-        """Get list of available models for the current provider"""
         
         if self.provider == "openai":
             return [
@@ -260,7 +209,6 @@ class LLMClient:
             return []
     
     def get_model_info(self) -> Dict[str, Any]:
-        """Get information about the current model configuration"""
         
         return {
             "provider": self.provider,
@@ -270,9 +218,7 @@ class LLMClient:
             "available_models": self.get_available_models()
         }
 
-# Example usage
 async def test_llm_client():
-    """Test the LLM client"""
     
     config = {
         "llm_provider": "openai",
@@ -284,24 +230,20 @@ async def test_llm_client():
     try:
         client = LLMClient(config)
         
-        # Test basic completion
         response = await client.get_completion("What are the benefits of electric cars?")
         print(f"Basic completion: {response[:100]}...")
         
-        # Test structured completion
         structured_response = await client.get_structured_completion(
             "List 3 benefits of electric cars",
             "JSON array of strings"
         )
         print(f"Structured response: {structured_response}")
         
-        # Test streaming
         print("Streaming response:")
         async for chunk in client.get_streaming_completion("Explain renewable energy"):
             print(chunk, end="", flush=True)
         print()
         
-        # Get model info
         model_info = client.get_model_info()
         print(f"Model info: {model_info}")
         

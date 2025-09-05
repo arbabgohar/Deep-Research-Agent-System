@@ -1,7 +1,3 @@
-"""
-Deep Research Agent System - Demo Script
-Showcases the system's capabilities with different test scenarios
-"""
 
 import asyncio
 import json
@@ -13,13 +9,11 @@ from deep_research_system import DeepResearchSystem
 from utils import create_user_profile, setup_logging
 
 class DeepResearchDemo:
-    """Demo class for showcasing the Deep Research Agent System"""
     
     def __init__(self):
         self.logger = setup_logging("demo")
         self.research_system = DeepResearchSystem()
         
-        # Test questions from the assignment
         self.test_questions = {
             "level_1": "What are the benefits of electric cars?",
             "level_2": "Compare the environmental impact of electric vs hybrid vs gas cars",
@@ -27,7 +21,6 @@ class DeepResearchDemo:
             "level_4": "Analyze the economic impact of remote work policies on small businesses vs large corporations, including productivity data and employee satisfaction trends"
         }
         
-        # Sample user profiles
         self.user_profiles = {
             "academic": create_user_profile("Dr. Sarah Chen", "Boston", "Academic Research", "Expert"),
             "business": create_user_profile("Mike Johnson", "New York", "Business Strategy", "Intermediate"),
@@ -35,7 +28,6 @@ class DeepResearchDemo:
         }
     
     async def run_basic_demo(self):
-        """Run a basic demonstration with Level 1 question"""
         
         print("\n" + "="*60)
         print("🚀 DEEP RESEARCH AGENT SYSTEM - BASIC DEMO")
@@ -45,11 +37,8 @@ class DeepResearchDemo:
         print(f"\n📝 Research Question: {question}")
         
         try:
-            # Conduct research
             print("\n🔍 Conducting research...")
             result = await self.research_system.conduct_research(question)
-            
-            # Display results
             self._display_basic_results(result)
             
         except Exception as e:
@@ -57,7 +46,6 @@ class DeepResearchDemo:
             print("💡 Make sure you have set up your API keys in the .env file")
     
     async def run_advanced_demo(self):
-        """Run an advanced demonstration with user personalization"""
         
         print("\n" + "="*60)
         print("🎯 DEEP RESEARCH AGENT SYSTEM - ADVANCED DEMO")
@@ -71,18 +59,14 @@ class DeepResearchDemo:
         print(f"🏢 Context: {user_profile['city']}, {user_profile['topic']}")
         
         try:
-            # Conduct research with personalization
             print("\n🔍 Conducting personalized research...")
             result = await self.research_system.conduct_research(question, user_profile)
-            
-            # Display detailed results
             self._display_detailed_results(result)
             
         except Exception as e:
             print(f"❌ Advanced demo failed: {str(e)}")
     
     async def run_streaming_demo(self):
-        """Run a streaming demonstration with real-time updates"""
         
         print("\n" + "="*60)
         print("⚡ DEEP RESEARCH AGENT SYSTEM - STREAMING DEMO")
@@ -96,7 +80,6 @@ class DeepResearchDemo:
         print("\n🔄 Starting streaming research...")
         
         try:
-            # Conduct streaming research
             async for update in self.research_system.research_with_streaming(question, user_profile):
                 self._display_streaming_update(update)
             
@@ -106,7 +89,6 @@ class DeepResearchDemo:
             print(f"❌ Streaming demo failed: {str(e)}")
     
     async def run_comparison_demo(self):
-        """Run a comparison demo showing different user profiles"""
         
         print("\n" + "="*60)
         print("🔄 DEEP RESEARCH AGENT SYSTEM - COMPARISON DEMO")
@@ -131,11 +113,9 @@ class DeepResearchDemo:
             except Exception as e:
                 print(f"❌ Failed for {profile_name}: {str(e)}")
         
-        # Compare results
         self._compare_results(results)
     
     def _display_basic_results(self, result: Dict[str, Any]):
-        """Display basic research results"""
         
         print("\n📊 RESEARCH RESULTS")
         print("-" * 40)
@@ -145,26 +125,22 @@ class DeepResearchDemo:
         print(f"⚠️  Conflicts: {len(result.get('conflicts', []))} detected")
         print(f"📈 Confidence: {result.get('metadata', {}).get('confidence_level', 0):.1%}")
         
-        # Show key findings
         findings = result.get('key_findings', [])
         if findings:
             print(f"\n🎯 Key Findings ({len(findings)}):")
-            for i, finding in enumerate(findings[:3], 1):  # Show first 3
+            for i, finding in enumerate(findings[:3], 1):
                 print(f"   {i}. {finding}")
             if len(findings) > 3:
                 print(f"   ... and {len(findings) - 3} more")
     
     def _display_detailed_results(self, result: Dict[str, Any]):
-        """Display detailed research results"""
         
         print("\n📊 DETAILED RESEARCH RESULTS")
         print("-" * 50)
         
-        # Basic info
         print(f"📋 Title: {result.get('title', 'N/A')}")
         print(f"📝 Executive Summary: {result.get('executive_summary', 'N/A')[:200]}...")
         
-        # Statistics
         metadata = result.get('metadata', {})
         print(f"\n📈 Research Statistics:")
         print(f"   • Total Sources: {metadata.get('total_sources', 0)}")
@@ -172,38 +148,33 @@ class DeepResearchDemo:
         print(f"   • Conflicts Detected: {metadata.get('conflicts_detected', 0)}")
         print(f"   • Confidence Level: {metadata.get('confidence_level', 0):.1%}")
         
-        # Key findings
         findings = result.get('key_findings', [])
         if findings:
             print(f"\n🎯 Key Findings ({len(findings)}):")
             for i, finding in enumerate(findings, 1):
                 print(f"   {i}. {finding}")
         
-        # Conclusions
         conclusions = result.get('conclusions', [])
         if conclusions:
             print(f"\n💡 Conclusions ({len(conclusions)}):")
             for i, conclusion in enumerate(conclusions, 1):
                 print(f"   {i}. {conclusion}")
         
-        # Recommendations
         recommendations = result.get('recommendations', [])
         if recommendations:
             print(f"\n🚀 Recommendations ({len(recommendations)}):")
             for i, recommendation in enumerate(recommendations, 1):
                 print(f"   {i}. {recommendation}")
         
-        # Citations
         citations = result.get('citations', [])
         if citations:
             print(f"\n📚 Citations ({len(citations)}):")
-            for i, citation in enumerate(citations[:3], 1):  # Show first 3
+            for i, citation in enumerate(citations[:3], 1):
                 print(f"   {citation['id']} {citation['reference'][:100]}...")
             if len(citations) > 3:
                 print(f"   ... and {len(citations) - 3} more citations")
     
     def _display_streaming_update(self, update: Dict[str, Any]):
-        """Display streaming research updates"""
         
         phase = update.get('phase', 'unknown')
         
@@ -247,7 +218,6 @@ class DeepResearchDemo:
             print(f"❌ Error: {update.get('error', 'Unknown error')}")
     
     def _compare_results(self, results: Dict[str, Dict[str, Any]]):
-        """Compare results across different user profiles"""
         
         print("\n📊 COMPARISON RESULTS")
         print("-" * 50)
@@ -263,7 +233,6 @@ class DeepResearchDemo:
             print(f"   • Recommendations: {len(result.get('recommendations', []))}")
     
     async def save_demo_results(self, results: Dict[str, Any], filename: str = None):
-        """Save demo results to file"""
         
         if filename is None:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -277,12 +246,10 @@ class DeepResearchDemo:
             print(f"❌ Failed to save results: {str(e)}")
 
 async def main():
-    """Main demo function"""
     
     print("🎯 Deep Research Agent System - Interactive Demo")
     print("=" * 60)
     
-    # Check if API keys are available
     api_keys = {
         "openai": bool(os.getenv("OPENAI_API_KEY")),
         "anthropic": bool(os.getenv("ANTHROPIC_API_KEY")),
@@ -299,21 +266,12 @@ async def main():
         print("   See the README.md file for setup instructions.")
         return
     
-    # Create demo instance
     demo = DeepResearchDemo()
     
-    # Run demos
     try:
-        # Basic demo
         await demo.run_basic_demo()
-        
-        # Advanced demo
         await demo.run_advanced_demo()
-        
-        # Streaming demo
         await demo.run_streaming_demo()
-        
-        # Comparison demo
         await demo.run_comparison_demo()
         
         print("\n🎉 All demos completed successfully!")
